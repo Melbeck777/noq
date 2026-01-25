@@ -1,10 +1,13 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Melbeck777/noq/internal/application/repository"
 	"github.com/Melbeck777/noq/internal/domain/entity"
+	"github.com/Melbeck777/noq/internal/domain/service"
+	"github.com/Melbeck777/noq/internal/domain/valueobject"
 	"github.com/spf13/viper"
 )
 
@@ -33,18 +36,60 @@ func (r *ConfigRepositoryImpl) Load() (entity.Config, error) {
 	v.AddConfigPath("$HOME/.config/noq")
 	err := v.ReadInConfig()
 	if err != nil {
-		return entity.Config{}, fmt.Errorf("Setting file read erro: %s\n", err)
+		var configFileNotFoundError viper.ConfigFileNotFoundError
+		if errors.As(err, &configFileNotFoundError) {
+			return entity.Config{}, fmt.Errorf("%w: %v", repository.ErrConfigNotFound, err)
+		}
+		return entity.Config{}, fmt.Errorf("%w: %s\n", repository.ErrConfigParse, err)
 	}
 
-	var cfg entity.Config
-	err = v.Unmarshal(&cfg)
+	var raw rawConfig
+	err = v.Unmarshal(&raw)
 	if err != nil {
-		return entity.Config{}, fmt.Errorf("unmarshall erro: %s\n", err)
+		return entity.Config{}, fmt.Errorf("%w: unmarshall: %s\n", repository.ErrConfigInvalid, err)
 	}
-	// config.ymlから値を取り出す
-	// 値の検証を行う
-	// configにマッピングする
 
-	cfg := entity.Config{}
+	// null check
+	if err := service.EmptyCheck(raw.MemoRoot, "memo_root"); err != nil {
+		return entity.Config{}, fmt.Errorf("%w: %v", repository.ErrConfigInvalid, err)
+	}
+	if err := service.EmptyCheck(raw.ArticleRoot, "article_root"); err != nil {
+		return entity.Config{}, fmt.Errorf("%w: %v", repository.ErrConfigInvalid, err)
+	}
+	if err := service.EmptyCheck(raw.Notion.Token, "notion.token"); err != nil {
+		return entity.Config{}, fmt.Errorf("%w: %v", repository.ErrConfigInvalid, err)
+	}
+	if err := service.EmptyCheck(raw.Notion.DefaultMemoDB, "notion.default_memo_db"); err != nil {
+		return entity.Config{}, fmt.Errorf("%w", err)
+	}
+	if len(raw.Notion.Databases) == 0 {
+		return entity.Config{}, fmt.Errorf("%w: notion.databases is empty\n", repository.ErrConfigInvalid)
+	}
+
+	dbs, err := valueobject.NewNotionDatabases(raw.Notion.Databases)
+	if err != nil {
+		return entity.Config{}, fmt.Errorf("%w: notion.databases: %s\n", repository.ErrConfigInvalid, err)
+	}
+
+	defaultAlias, err := valueobject.NewDatabaseAlias(raw.Notion.DefaultMemoDB)
+	if err != nil {
+		return entity.Config{}, fmt.Errorf("%w: %s\n", repository.ErrConfigInvalid, err)
+	}
+	if _, ok := dbs.Get(defaultAlias); !ok {
+		return entity.Config{}, fmt.Errorf("%w: %s\n", repository.ErrConfigInvalid, err)
+	}
+	// TODO: ~/.config/noq/config.ymlがない時は作成する->オーケストレーション部分はusecaseで実装する
+	// TODO: defaultMemoDBがない時に設定するように促す->別でこのファイル内で実装する
+	// TODO: 単一項目のロードを実装する特にNotion.Databasesのみを取得する実装これはConfigよりも別の所だろうか？Configの値を読み出すからConfigに入れるのが適切なような気もしている
+	cfg := entity.Config{
+		MemoRoot:    raw.MemoRoot,
+		ArticleRoot: raw.ArticleRoot,
+		Notion: entity.NotionConfig{
+			Token:         raw.Notion.Token,
+			DefaultMemoDB: defaultAlias,
+			Databases:     dbs,
+		},
+	}
+
 	return cfg, nil
 }
