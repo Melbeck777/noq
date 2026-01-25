@@ -1,3 +1,4 @@
+// internal/domain/entity/NotionConfig.go
 package entity
 
 import (
