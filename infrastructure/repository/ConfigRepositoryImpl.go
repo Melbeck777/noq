@@ -1,3 +1,4 @@
+// infrastructure/repository/ConfigRepositoryImpl
 package repository
 
 import (
@@ -5,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/Melbeck777/noq/internal/application/repository"
+	"github.com/Melbeck777/noq/internal/application/validation"
 	"github.com/Melbeck777/noq/internal/domain/entity"
-	"github.com/Melbeck777/noq/internal/domain/service"
 	"github.com/Melbeck777/noq/internal/domain/valueobject"
 	"github.com/spf13/viper"
 )
@@ -50,17 +51,17 @@ func (r *ConfigRepositoryImpl) Load() (entity.Config, error) {
 	}
 
 	// null check
-	if err := service.EmptyCheck(raw.MemoRoot, "memo_root"); err != nil {
-		return entity.Config{}, fmt.Errorf("%w: %v", repository.ErrConfigInvalid, err)
+	if err := validation.EmptyCheck(raw.MemoRoot, "memo_root", repository.ErrConfigInvalid); err != nil {
+		return entity.Config{}, err
 	}
-	if err := service.EmptyCheck(raw.ArticleRoot, "article_root"); err != nil {
-		return entity.Config{}, fmt.Errorf("%w: %v", repository.ErrConfigInvalid, err)
+	if err := validation.EmptyCheck(raw.ArticleRoot, "article_root", repository.ErrConfigInvalid); err != nil {
+		return entity.Config{}, err
 	}
-	if err := service.EmptyCheck(raw.Notion.Token, "notion.token"); err != nil {
-		return entity.Config{}, fmt.Errorf("%w: %v", repository.ErrConfigInvalid, err)
+	if err := validation.EmptyCheck(raw.Notion.Token, "notion.token", repository.ErrConfigInvalid); err != nil {
+		return entity.Config{}, err
 	}
-	if err := service.EmptyCheck(raw.Notion.DefaultMemoDB, "notion.default_memo_db"); err != nil {
-		return entity.Config{}, fmt.Errorf("%w", err)
+	if err := validation.EmptyCheck(raw.Notion.DefaultMemoDB, "notion.default_memo_db", repository.ErrConfigInvalid); err != nil {
+		return entity.Config{}, err
 	}
 	if len(raw.Notion.Databases) == 0 {
 		return entity.Config{}, fmt.Errorf("%w: notion.databases is empty\n", repository.ErrConfigInvalid)
@@ -76,7 +77,7 @@ func (r *ConfigRepositoryImpl) Load() (entity.Config, error) {
 		return entity.Config{}, fmt.Errorf("%w: %s\n", repository.ErrConfigInvalid, err)
 	}
 	if _, ok := dbs.Get(defaultAlias); !ok {
-		return entity.Config{}, fmt.Errorf("%w: %s\n", repository.ErrConfigInvalid, err)
+		return entity.Config{}, fmt.Errorf("%w: default_memo_db not found in notion.databaes: %s\n", repository.ErrConfigInvalid, raw.Notion.DefaultMemoDB)
 	}
 	// TODO: ~/.config/noq/config.ymlがない時は作成する->オーケストレーション部分はusecaseで実装する
 	// TODO: defaultMemoDBがない時に設定するように促す->別でこのファイル内で実装する
