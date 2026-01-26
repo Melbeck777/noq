@@ -1,3 +1,4 @@
+// internal/domain/valuobject/NotionDatabases.go
 package valueobject
 
 type (
@@ -35,7 +36,7 @@ func NewDatabaseAlias(s string) (DatabaseAlias, error) {
 
 func NewDatabaseID(s string) (DatabaseID, error) {
 	// 空文字禁止
-	// uuid形式
+	// https://www.notion.so/<データベースID>?v=<ビューID>
 	return DatabaseID(s), nil
 }
 
