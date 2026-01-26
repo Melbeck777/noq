@@ -4,12 +4,15 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/Melbeck777/noq/internal/application/repository"
 	"github.com/Melbeck777/noq/internal/application/validation"
 	"github.com/Melbeck777/noq/internal/domain/entity"
 	"github.com/Melbeck777/noq/internal/domain/valueobject"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 type ConfigRepositoryImpl struct {
@@ -34,7 +37,7 @@ func (r *ConfigRepositoryImpl) Load() (entity.Config, error) {
 	v := viper.New()
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
-	v.AddConfigPath("$HOME/.config/noq")
+	v.SetConfigFile(r.configPath)
 	err := v.ReadInConfig()
 	if err != nil {
 		var configFileNotFoundError viper.ConfigFileNotFoundError
@@ -93,4 +96,38 @@ func (r *ConfigRepositoryImpl) Load() (entity.Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func (r *ConfigRepositoryImpl) configEntityToRawConfig(cfg entity.Config) rawConfig {
+	raw := rawConfig{}
+	raw.MemoRoot = cfg.MemoRoot
+	raw.ArticleRoot = cfg.ArticleRoot
+	raw.Notion.Token = cfg.Notion.Token
+	raw.Notion.DefaultMemoDB = cfg.Notion.DefaultMemoDB.String()
+	raw.Notion.Databases = cfg.Notion.Databases.ToMap()
+	return raw
+}
+
+func (r *ConfigRepositoryImpl) Save(cfg entity.Config) error {
+	return r.save(cfg, false)
+}
+
+func (r *ConfigRepositoryImpl) SaveOverwrite(cfg entity.Config) error {
+	return r.save(cfg, true)
+}
+
+func (r *ConfigRepositoryImpl) save(cfg entity.Config, overwrite bool) error {
+	b, err := yaml.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+	if !overwrite {
+		if _, err := os.Stat(r.configPath); err == nil {
+			return fmt.Errorf("config.yml is already exist")
+		}
+	}
+	if err := ioutil.WriteFile(r.configPath, b, 0o600); err != nil {
+		return err
+	}
+	return nil
 }
