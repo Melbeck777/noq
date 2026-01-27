@@ -10,6 +10,10 @@ type NotionDatabases struct {
 	m map[DatabaseAlias]DatabaseID
 }
 
+func (d NotionDatabases) GetDBMap() map[DatabaseAlias]DatabaseID {
+	return d.m
+}
+
 func NewNotionDatabases(raw map[string]string) (NotionDatabases, error) {
 	m := make(map[DatabaseAlias]DatabaseID, len(raw))
 	for k, v := range raw {
