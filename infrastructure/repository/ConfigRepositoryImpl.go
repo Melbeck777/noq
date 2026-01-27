@@ -24,13 +24,13 @@ func NewConfigRepositoryImpl(configPath string) repository.ConfigRepository {
 }
 
 type rawConfig struct {
-	MemoRoot    string `mapstructure:"memo_root"`
-	ArticleRoot string `mapstructure:"article_root"`
+	MemoRoot    string `yaml:"memo_root" mapstructure:"memo_root"`
+	ArticleRoot string `yaml:"article_root" mapstructure:"article_root"`
 	Notion      struct {
-		Token         string            `mapstructure:"token"`
-		DefaultMemoDB string            `mapstructure:"default_memo_db"`
-		Databases     map[string]string `mapstructure:"databases"`
-	} `mapstructure:"notion"`
+		Token         string            `yaml:"token" mapstructure:"token"`
+		DefaultMemoDB string            `yaml:"default_memo_db" mapstructure:"default_memo_db"`
+		Databases     map[string]string `yaml:"databases" mapstructure:"databases"`
+	} `yaml:"notion" mapstructure:"notion"`
 }
 
 func (r *ConfigRepositoryImpl) Load() (entity.Config, error) {
@@ -103,8 +103,11 @@ func (r *ConfigRepositoryImpl) configEntityToRawConfig(cfg entity.Config) rawCon
 	raw.MemoRoot = cfg.MemoRoot
 	raw.ArticleRoot = cfg.ArticleRoot
 	raw.Notion.Token = cfg.Notion.Token
-	raw.Notion.DefaultMemoDB = cfg.Notion.DefaultMemoDB.String()
-	raw.Notion.Databases = cfg.Notion.Databases.ToMap()
+	raw.Notion.DefaultMemoDB = string(cfg.Notion.DefaultMemoDB)
+	raw.Notion.Databases = map[string]string{}
+	for k, v := range cfg.Notion.Databases.GetDBMap() {
+		raw.Notion.Databases[string(k)] = string(v)
+	}
 	return raw
 }
 
@@ -117,7 +120,8 @@ func (r *ConfigRepositoryImpl) SaveOverwrite(cfg entity.Config) error {
 }
 
 func (r *ConfigRepositoryImpl) save(cfg entity.Config, overwrite bool) error {
-	b, err := yaml.Marshal(cfg)
+	raw := r.configEntityToRawConfig(cfg)
+	b, err := yaml.Marshal(raw)
 	if err != nil {
 		return err
 	}
@@ -126,6 +130,7 @@ func (r *ConfigRepositoryImpl) save(cfg entity.Config, overwrite bool) error {
 			return fmt.Errorf("config.yml is already exist")
 		}
 	}
+	fmt.Printf(raw.MemoRoot)
 	if err := ioutil.WriteFile(r.configPath, b, 0o600); err != nil {
 		return err
 	}
