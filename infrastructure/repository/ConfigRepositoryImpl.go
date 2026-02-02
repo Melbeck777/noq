@@ -4,7 +4,6 @@ package repository
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/Melbeck777/noq/internal/application/repository"
@@ -79,7 +78,7 @@ func (r *ConfigRepositoryImpl) Load() (entity.Config, error) {
 	if err != nil {
 		return entity.Config{}, fmt.Errorf("%w: %s\n", repository.ErrConfigInvalid, err)
 	}
-	if _, ok := dbs.Get(defaultAlias); !ok {
+	if _, ok := dbs.Get(*defaultAlias); !ok {
 		return entity.Config{}, fmt.Errorf("%w: default_memo_db not found in notion.databaes: %s\n", repository.ErrConfigInvalid, raw.Notion.DefaultMemoDB)
 	}
 	// TODO: ~/.config/noq/config.ymlがない時は作成する->オーケストレーション部分はusecaseで実装する
@@ -90,7 +89,7 @@ func (r *ConfigRepositoryImpl) Load() (entity.Config, error) {
 		ArticleRoot: raw.ArticleRoot,
 		Notion: entity.NotionConfig{
 			Token:         raw.Notion.Token,
-			DefaultMemoDB: defaultAlias,
+			DefaultMemoDB: *defaultAlias,
 			Databases:     dbs,
 		},
 	}
@@ -103,7 +102,7 @@ func (r *ConfigRepositoryImpl) configEntityToRawConfig(cfg entity.Config) rawCon
 	raw.MemoRoot = cfg.MemoRoot
 	raw.ArticleRoot = cfg.ArticleRoot
 	raw.Notion.Token = cfg.Notion.Token
-	raw.Notion.DefaultMemoDB = string(cfg.Notion.DefaultMemoDB)
+	raw.Notion.DefaultMemoDB = cfg.Notion.DefaultMemoDB.Value()
 	raw.Notion.Databases = map[string]string{}
 	for k, v := range cfg.Notion.Databases.GetDBMap() {
 		raw.Notion.Databases[string(k)] = string(v)
@@ -115,7 +114,7 @@ func (r *ConfigRepositoryImpl) Save(cfg entity.Config) error {
 	return r.save(cfg, false)
 }
 
-func (r *ConfigRepositoryImpl) SaveOverwrite(cfg entity.Config) error {
+func (r *ConfigRepositoryImpl) SaveOverWrite(cfg entity.Config) error {
 	return r.save(cfg, true)
 }
 
@@ -131,7 +130,7 @@ func (r *ConfigRepositoryImpl) save(cfg entity.Config, overwrite bool) error {
 		}
 	}
 	fmt.Printf(raw.MemoRoot)
-	if err := ioutil.WriteFile(r.configPath, b, 0o600); err != nil {
+	if err := os.WriteFile(r.configPath, b, 0o600); err != nil {
 		return err
 	}
 	return nil
