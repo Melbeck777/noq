@@ -80,3 +80,19 @@ sentence…
 - [ ] Setup config with command
 - [ ] Make new memo file in local `memo.root`
 - [ ] Consider to about design article
+
+config
+
+```
+memo_root: "/home/user/documents/noq/memo"
+article_root: "/home/user/documents/noq/article"
+
+notion:
+    default_memo_db: "xxxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
+    databases:
+        memo: "xxxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
+        article: "yyyyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyy"
+
+qiita:
+    tokne: "YOUR_TOKEN"
+```
