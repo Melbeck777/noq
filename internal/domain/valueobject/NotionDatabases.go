@@ -1,51 +1,55 @@
 // internal/domain/valuobject/NotionDatabases.go
 package valueobject
 
-type (
-	DatabaseAlias string
-	DatabaseID    string
-)
+import "fmt"
 
-type NotionDatabases struct {
-	m map[DatabaseAlias]DatabaseID
+type DatabaseAlias struct {
+	ValueObject[string]
 }
 
-func (d NotionDatabases) GetDBMap() map[DatabaseAlias]DatabaseID {
+func NewDatabaseAlias(value string) (*DatabaseAlias, error) {
+	if value == "" {
+		return &DatabaseAlias{}, fmt.Errorf("Null is not accept: ")
+	}
+	return &DatabaseAlias{NewValueObject[string](value)}, nil
+}
+
+type DatabaseId struct {
+	ValueObject[string]
+}
+
+func NewDatabaseId(value string) (*DatabaseId, error) {
+	if value == "" {
+		return &DatabaseId{}, fmt.Errorf("Null is not accept: ")
+	}
+	return &DatabaseId{NewValueObject[string](value)}, nil
+}
+
+type NotionDatabases struct {
+	m map[string]string
+}
+
+func (d NotionDatabases) GetDBMap() map[string]string {
 	return d.m
 }
 
 func NewNotionDatabases(raw map[string]string) (NotionDatabases, error) {
-	m := make(map[DatabaseAlias]DatabaseID, len(raw))
+	m := make(map[string]string, len(raw))
 	for k, v := range raw {
-		alias, err := NewDatabaseAlias(k)
-		if err != nil {
+		if _, err := NewDatabaseAlias(k); err != nil {
 			return NotionDatabases{}, err
 		}
 
-		id, err := NewDatabaseID(v)
-		if err != nil {
+		if _, err := NewDatabaseId(v); err != nil {
 			return NotionDatabases{}, err
 		}
-
-		m[alias] = id
+		m[k] = v
 	}
 	return NotionDatabases{m: m}, nil
 }
 
-func NewDatabaseAlias(s string) (DatabaseAlias, error) {
-	// 空文字禁止
-	// 予約後の禁止
-	return DatabaseAlias(s), nil
-}
-
-func NewDatabaseID(s string) (DatabaseID, error) {
-	// 空文字禁止
-	// https://www.notion.so/<データベースID>?v=<ビューID>
-	return DatabaseID(s), nil
-}
-
 // getの実装
-func (d NotionDatabases) Get(alias DatabaseAlias) (DatabaseID, bool) {
-	id, ok := d.m[alias]
+func (d NotionDatabases) Get(alias DatabaseAlias) (string, bool) {
+	id, ok := d.m[alias.Value()]
 	return id, ok
 }
