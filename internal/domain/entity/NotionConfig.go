@@ -11,14 +11,20 @@ type NotionConfig struct {
 	Databases     valueobject.NotionDatabases
 }
 
-func NewNotionConfig(token, defaultMemoDb string, databases map[string]string) *NotionConfig {
-	dbAlias, _ := valueobject.NewDatabaseAlias(defaultMemoDb)
-	dbs, _ := valueobject.NewNotionDatabases(databases)
-	return &NotionConfig{
+func NewNotionConfig(token, defaultMemoDb string, databases map[string]string) (NotionConfig, error) {
+	dbAlias, err := valueobject.NewDatabaseAlias(defaultMemoDb)
+	if err != nil {
+		return NotionConfig{}, err
+	}
+	dbs, err := valueobject.NewNotionDatabases(databases)
+	if err != nil {
+		return NotionConfig{}, err
+	}
+	return NotionConfig{
 		Token:         token,
 		DefaultMemoDB: *dbAlias,
 		Databases:     dbs,
-	}
+	}, nil
 }
 
 func (n *NotionConfig) UpdateDefaultMemoDB(memo string) error {
