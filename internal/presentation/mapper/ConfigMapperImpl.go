@@ -1,8 +1,11 @@
 package mapper
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+
 	"github.com/Melbeck777/noq/internal/domain/entity"
-	"github.com/Melbeck777/noq/internal/domain/valueobject"
 	"github.com/Melbeck777/noq/internal/presentation/dto"
 )
 
@@ -13,27 +16,43 @@ func NewConfigMapper() *ConfigMapperImpl {
 }
 
 func (m *ConfigMapperImpl) InitRequestDtoToConfig(dto dto.InitRequestDto) (entity.Config, error) {
-	var res entity.Config
 	var err error
-	res.MemoRoot = dto.MemoRoot
-	res.ArticleRoot = dto.ArticleRoot
-	memo_db, err := valueobject.NewDatabaseAlias(dto.DefaultMemoDB)
+	notionConfig, err := entity.NewNotionConfig(dto.NotionToken, dto.DefaultMemoDB, dto.Databases)
 	if err != nil {
 		return entity.Config{}, err
 	}
-	res.Notion.DefaultMemoDB = *memo_db
-	res.Notion.Token = dto.NotionToken
-	res.Notion.Databases, err = valueobject.NewNotionDatabases(dto.Databases)
-	if err != nil {
-		return entity.Config{}, err
-	}
+	res := entity.Config{dto.MemoRoot, dto.ArticleRoot, notionConfig}
+	fmt.Println(res)
+
 	return res, nil
 }
 
 func (m *ConfigMapperImpl) EntityConfigToInitRequestDto(cfg entity.Config) (dto.InitRequestDto, error) {
-	var res dto.InitRequestDto
+	res, err := dto.NewInitRequestDto()
+	if err != nil {
+		return dto.InitRequestDto{}, err
+	}
 	res.MemoRoot = cfg.MemoRoot
 	res.ArticleRoot = cfg.ArticleRoot
 	res.DefaultMemoDB = cfg.Notion.DefaultMemoDB.Value()
+	res.Databases = cfg.Notion.Databases.GetDBMap()
+	if res.Databases == nil {
+		res.Databases = make(map[string]string)
+	}
 	return res, nil
+}
+
+func prettyPrint(v any) {
+	data, err := json.Marshal(v)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	var buf bytes.Buffer
+	err = json.Indent(&buf, data, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(buf.String())
 }
