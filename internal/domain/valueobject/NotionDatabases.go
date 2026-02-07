@@ -1,7 +1,9 @@
 // internal/domain/valuobject/NotionDatabases.go
 package valueobject
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type DatabaseAlias struct {
 	ValueObject[string]
@@ -9,7 +11,7 @@ type DatabaseAlias struct {
 
 func NewDatabaseAlias(value string) (*DatabaseAlias, error) {
 	if value == "" {
-		return &DatabaseAlias{}, fmt.Errorf("Null is not accept: ")
+		return nil, fmt.Errorf("DatabaseAlias cannot be empty")
 	}
 	return &DatabaseAlias{NewValueObject[string](value)}, nil
 }
@@ -20,7 +22,7 @@ type DatabaseId struct {
 
 func NewDatabaseId(value string) (*DatabaseId, error) {
 	if value == "" {
-		return &DatabaseId{}, fmt.Errorf("Null is not accept: ")
+		return nil, fmt.Errorf("DatabaseId cannot be empty")
 	}
 	return &DatabaseId{NewValueObject[string](value)}, nil
 }
