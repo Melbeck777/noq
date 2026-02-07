@@ -54,23 +54,43 @@ func ScanInput(input NewInput) error {
 	return nil
 }
 
-type KeyValueInput struct {
-	Title             string
-	Key               *string
-	Value             *string
+type MapInput struct {
 	KeyDescritpiton   string
 	ValueDescritpiton string
 	QuitMark          string
+	Map               map[string]string
 }
 
-func KeyValueInputs(input KeyValueInput) error {
+func MapInputs(input MapInput) {
 	flag := true
-	sc := bufio.NewScanner(os.Stdin)
 	for flag {
-		sc.Scan()
-		if err := sc.Err(); err != nil {
-			return err
+		key := ScanDetail(input.KeyDescritpiton, input.QuitMark)
+		if key == "" {
+			return
 		}
+		if v, ok := input.Map[key]; ok {
+			// 同じkeyやvalueが入った時にはじくようにする
+			fmt.Printf("This %s is already exisit, value is %s\n- Input 'c' for continue\n- Input 'i' for ignore this input\n- Input 'q' for quiting input database\n", key, v)
+		}
+
+		value := ScanDetail(input.ValueDescritpiton, input.QuitMark)
+		if value == "" {
+			return
+		}
+		input.Map[key] = value
 	}
-	return nil
+}
+
+func ScanDetail(description, quitMark string) string {
+	sc := bufio.NewScanner(os.Stdin)
+	fmt.Printf(description)
+	sc.Scan()
+	if sc.Err() != nil {
+		return ""
+	}
+	text := sc.Text()
+	if text == "q" {
+		return ""
+	}
+	return text
 }
