@@ -9,6 +9,7 @@ type ValueObject[T any] interface {
 	Value() T
 	Equals(other ValueObject[T]) bool
 	String() string
+	Set(T)
 }
 
 type valueObject[T any] struct {
@@ -29,4 +30,8 @@ func (v *valueObject[T]) Equals(other ValueObject[T]) bool {
 
 func (v *valueObject[T]) String() string {
 	return fmt.Sprintf("%v", v.value)
+}
+
+func (v *valueObject[T]) Set(value T) {
+	v.value = value
 }
