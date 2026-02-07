@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/Melbeck777/noq/internal/application/repository"
 	"github.com/Melbeck777/noq/internal/application/validation"
@@ -129,7 +130,9 @@ func (r *ConfigRepositoryImpl) save(cfg entity.Config, overwrite bool) error {
 			return fmt.Errorf("config.yml is already exist")
 		}
 	}
-	fmt.Printf(raw.MemoRoot)
+	if err := os.MkdirAll(filepath.Dir(r.configPath), 0o700); err != nil {
+		return err
+	}
 	if err := os.WriteFile(r.configPath, b, 0o600); err != nil {
 		return err
 	}
