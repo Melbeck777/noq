@@ -15,3 +15,14 @@ type InitResponseDto struct {
 	DefaultMemoDB string
 	Databases     map[string]string
 }
+
+func NewInitRequestDto() (InitRequestDto, error) {
+	m := make(map[string]string)
+	return InitRequestDto{
+		MemoRoot:      "",
+		ArticleRoot:   "",
+		NotionToken:   "",
+		DefaultMemoDB: "",
+		Databases:     m,
+	}, nil
+}
