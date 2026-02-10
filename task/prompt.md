@@ -11,9 +11,10 @@
   - [x] MapKeySelect -> SelectInput の依存で選択を実装する
   - [x] 選択された key を返す（キャンセル時の扱いも含む）
 
-- [x] テストを実装する（必須）
+- [ ] テストを実装する（必須）
   - [x] SelectInput: 正常系（選択できる）
   - [x] SelectInput: 異常系（数値以外 / 範囲外 / 空入力の再入力）
   - [x] SelectInput: キャンセル系（キャンセル時の戻り値が期待通り）
   - [x] MapKeySelect: keys 抽出と sort が期待通り
+  - [x] MapKeySelect: SelectInput への委譲で期待した key が返る
   - [x] MapKeySelect: SelectInput への委譲で期待した key が返る
