@@ -7,14 +7,18 @@ import (
 
 type NotionConfig struct {
 	Token         string
-	DefaultMemoDB valueobject.DatabaseAlias
+	DefaultMemoDB *valueobject.DatabaseAlias
 	Databases     valueobject.NotionDatabases
 }
 
 func NewNotionConfig(token, defaultMemoDb string, databases map[string]string) (NotionConfig, error) {
-	dbAlias, err := valueobject.NewDatabaseAlias(defaultMemoDb)
-	if err != nil {
-		return NotionConfig{}, err
+	var dbAlias *valueobject.DatabaseAlias
+	if defaultMemoDb != "" {
+		tmpAlias, err := valueobject.NewDatabaseAlias(defaultMemoDb)
+		if err != nil {
+			return NotionConfig{}, err
+		}
+		dbAlias = tmpAlias
 	}
 	dbs, err := valueobject.NewNotionDatabases(databases)
 	if err != nil {
@@ -22,16 +26,16 @@ func NewNotionConfig(token, defaultMemoDb string, databases map[string]string) (
 	}
 	return NotionConfig{
 		Token:         token,
-		DefaultMemoDB: *dbAlias,
+		DefaultMemoDB: dbAlias,
 		Databases:     dbs,
 	}, nil
 }
 
 func (n *NotionConfig) UpdateDefaultMemoDB(memo string) error {
-	update_value, err := valueobject.NewDatabaseAlias(memo)
+	updateAlias, err := valueobject.NewDatabaseAlias(memo)
 	if err != nil {
 		return err
 	}
-	n.DefaultMemoDB = *update_value
+	n.DefaultMemoDB = updateAlias
 	return nil
 }

@@ -90,7 +90,7 @@ func (r *ConfigRepositoryImpl) Load() (entity.Config, error) {
 		ArticleRoot: raw.ArticleRoot,
 		Notion: entity.NotionConfig{
 			Token:         raw.Notion.Token,
-			DefaultMemoDB: *defaultAlias,
+			DefaultMemoDB: defaultAlias,
 			Databases:     dbs,
 		},
 	}
