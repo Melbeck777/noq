@@ -35,33 +35,39 @@ func newInitCmd(ui *rwi.RWI, configUseCase usecase.ConfigUseCase) *cobra.Command
 				return err
 			}
 			inputs := []prompt.Input{
-				{Title: "memo_root", Value: &now.MemoRoot},
-				{Title: "article_root", Value: &now.ArticleRoot},
-				{Title: "notion_token", Value: &now.NotionToken},
-				{Title: "default_memo_db", Value: &now.DefaultMemoDB},
+				{Title: "memo_root", Value: &now.MemoRoot, Description: "Input full path "},
+				{Title: "article_root", Value: &now.ArticleRoot, Description: "Input full path "},
+				{Title: "notion_token", Value: &now.NotionToken, Description: "Input Notion's token "},
 			}
 			if err := prompt.UpdateInputs(inputs); err != nil {
 				return err
 			}
 
 			MapInput := prompt.MapInput{
-				KeyDescritpiton:   "Notion Database key > ",
-				ValueDescritpiton: "Notion Database Id > ",
-				QuitMark:          "q",
-				Map:               now.Databases,
+				KeyDescription:   "Notion Database key > ",
+				ValueDescription: "Notion Database Id > ",
+				QuitMark:         "q",
+				Map:              now.Databases,
 			}
-			// Mapの初期化を入れる入れるならmapを定義する構造体もしくはマップを定義する際に利用するより共通の構造体
-			// アーキとしてコモン的なものを作るのはありかどうか
+			// DBにkey,valueを入力する
 			prompt.MapInputs(MapInput)
+			MapKey := prompt.MapKey{
+				Map:   now.Databases,
+				Title: "Key",
+				Value: &now.DefaultMemoDB,
+			}
 
-			// prettyPrint(now.Databases) // This line is now redundant
+			if err := prompt.MapKeySelect(MapKey); err != nil {
+				return err
+			}
+
 			cfg, err := Mapper.InitRequestDtoToConfig(now)
 			fmt.Println(cfg, err)
 			if err != nil {
 				fmt.Println(err)
 				return err
 			}
-
+			// 上書き保存
 			return configUseCase.SaveOverWrite(cfg)
 		},
 	}
