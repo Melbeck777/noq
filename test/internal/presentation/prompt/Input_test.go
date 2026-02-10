@@ -247,28 +247,53 @@ func TestSelectInput(t *testing.T) {
 
 func TestMapKeySelect(t *testing.T) {
 	tests := []struct {
-		name     string
-		inputMap map[string]string
-		input    string
-		title    string
-		want     string
-		wantErr  bool
+		name         string
+		initialMap   map[string]string
+		input        string
+		title        string
+		wantValue    string
+		wantErr      bool
+		wantValueNil bool
 	}{
 		{
-			name:     "valid selection",
-			inputMap: map[string]string{"key1": "value1", "key2": "value2"},
-			input:    "0\n", // Assuming "key1" is at index 0 after sorting
-			title:    "Select Key",
-			want:     "key1",
-			wantErr:  false,
+			name:       "valid selection",
+			initialMap: map[string]string{"key1": "value1", "key2": "value2"},
+			input:      "0\n", // Assuming "key1" is at index 0 after sorting
+			title:      "Select Key",
+			wantValue:  "key1",
+			wantErr:    false,
 		},
 		{
-			name:     "cancelled input",
-			inputMap: map[string]string{"key1": "value1"},
-			input:    "abc\n", // Invalid input, should lead to cancellation
-			title:    "Select Key",
-			want:     "",
-			wantErr:  true,
+			name:       "cancelled input (empty string)",
+			initialMap: map[string]string{"key1": "value1"},
+			input:      "\n",
+			title:      "Select Key",
+			wantValue:  "",
+			wantErr:    true,
+		},
+		{
+			name:       "invalid input (non-integer)",
+			initialMap: map[string]string{"key1": "value1"},
+			input:      "abc\n",
+			title:      "Select Key",
+			wantValue:  "",
+			wantErr:    true,
+		},
+		{
+			name:       "out of range - negative index",
+			initialMap: map[string]string{"key1": "value1", "key2": "value2"},
+			input:      "-1\n",
+			title:      "Select Key",
+			wantValue:  "",
+			wantErr:    true,
+		},
+		{
+			name:       "out of range - too high index",
+			initialMap: map[string]string{"key1": "value1", "key2": "value2"},
+			input:      "2\n",
+			title:      "Select Key",
+			wantValue:  "",
+			wantErr:    true,
 		},
 	}
 
@@ -278,14 +303,30 @@ func TestMapKeySelect(t *testing.T) {
 			_, restoreStdout := captureStdout()
 			defer restoreStdout()
 
-			got, err := prompt.MapKeySelect(tt.inputMap, tt.title)
+			var selectedVal string
+			mapKey := prompt.MapKey{
+				Map:   tt.initialMap,
+				Title: tt.title,
+				Value: &selectedVal,
+			}
+
+			err := prompt.MapKeySelect(mapKey)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("MapKeySelect() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("MapKeySelect() got = %v, want %v", got, tt.want)
+
+			if tt.wantErr {
+				// If an error is expected, the value should not be set or retain its initial value.
+				// In our case, for cancellation, it should remain its initial value (empty string).
+				if *mapKey.Value != "" {
+					t.Errorf("MapKeySelect() for error case got value = %v, want %v", *mapKey.Value, "")
+				}
+			} else {
+				if *mapKey.Value != tt.wantValue {
+					t.Errorf("MapKeySelect() got value = %v, want %v", *mapKey.Value, tt.wantValue)
+				}
 			}
 		})
 	}

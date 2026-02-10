@@ -63,7 +63,6 @@ type NewInput struct {
 }
 
 func NewInputs(inputs []NewInput) error {
-	fmt.Println("New input start")
 	sc := bufio.NewScanner(os.Stdin) // Create scanner once
 	for i := range inputs {
 		if inputs[i].Value == nil {
@@ -73,24 +72,30 @@ func NewInputs(inputs []NewInput) error {
 			return err
 		}
 	}
-	fmt.Println("New input sucess")
 	return nil
 }
 
-func MapKeySelect(m map[string]string, title string) (string, error) {
-	keys := make([]string, 0, len(m))
-	for k := range m {
+type MapKey struct {
+	Map   map[string]string
+	Title string
+	Value *string
+}
+
+func MapKeySelect(mapKey MapKey) error {
+	keys := make([]string, 0, len(mapKey.Map))
+	for k := range mapKey.Map {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	selectedValue, ok, err := SelectInput[string](keys, title, func(s string) string { return s })
+	selectedValue, ok, err := SelectInput[string](keys, mapKey.Title, func(s string) string { return s })
 	if err != nil {
-		return "", err
+		return err
 	}
 	if !ok {
-		return "", fmt.Errorf("Cancelled input")
+		return fmt.Errorf("Cancelled input")
 	}
-	return selectedValue, nil
+	*mapKey.Value = selectedValue
+	return nil
 }
 
 func ScanInput(input *NewInput) error {
