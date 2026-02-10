@@ -8,7 +8,6 @@ import (
 
 	"github.com/Melbeck777/noq/internal/application/repository"
 	"github.com/Melbeck777/noq/internal/domain/entity"
-	"github.com/Melbeck777/noq/internal/domain/valueobject"
 )
 
 // 最初にロードする
@@ -49,10 +48,5 @@ func (u *ConfigUseCaseImpl) DefaultValue() (entity.Config, error) {
 	noq_dir := filepath.Join(home, "noq")
 	cfg.MemoRoot = filepath.Join(noq_dir, "memo")
 	cfg.ArticleRoot = filepath.Join(noq_dir, "article")
-	alias, err := valueobject.NewDatabaseAlias("None")
-	if err != nil {
-		return entity.Config{}, err
-	}
-	cfg.Notion.DefaultMemoDB = *alias
 	return cfg, nil
 }

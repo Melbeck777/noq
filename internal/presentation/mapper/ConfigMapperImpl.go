@@ -28,13 +28,18 @@ func (m *ConfigMapperImpl) InitRequestDtoToConfig(dto dto.InitRequestDto) (entit
 }
 
 func (m *ConfigMapperImpl) EntityConfigToInitRequestDto(cfg entity.Config) (dto.InitRequestDto, error) {
+	if m == nil {
+		panic("ConfigMpapperImpl is nil")
+	}
 	res, err := dto.NewInitRequestDto()
 	if err != nil {
 		return dto.InitRequestDto{}, err
 	}
 	res.MemoRoot = cfg.MemoRoot
 	res.ArticleRoot = cfg.ArticleRoot
-	res.DefaultMemoDB = cfg.Notion.DefaultMemoDB.Value()
+	if cfg.Notion.DefaultMemoDB != nil {
+		res.DefaultMemoDB = cfg.Notion.DefaultMemoDB.Value()
+	}
 	res.Databases = cfg.Notion.Databases.GetDBMap()
 	if res.Databases == nil {
 		res.Databases = make(map[string]string)
