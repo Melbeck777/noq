@@ -1,9 +1,8 @@
 package mapper
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/Melbeck777/noq/internal/domain/entity"
 	"github.com/Melbeck777/noq/internal/presentation/dto"
@@ -44,20 +43,10 @@ func (m *ConfigMapperImpl) EntityConfigToInitRequestDto(cfg entity.Config) (dto.
 	if res.Databases == nil {
 		res.Databases = make(map[string]string)
 	}
+	// トークンのマスク
+	if cfg.Notion.Token != "" {
+		tmp := cfg.Notion.Token
+		res.NotionToken = tmp[:4] + strings.Repeat("*", len(tmp)-4)
+	}
 	return res, nil
-}
-
-func prettyPrint(v any) {
-	data, err := json.Marshal(v)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	var buf bytes.Buffer
-	err = json.Indent(&buf, data, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(buf.String())
 }
