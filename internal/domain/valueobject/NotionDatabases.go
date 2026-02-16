@@ -51,7 +51,7 @@ func NewNotionDatabases(raw map[string]string) (NotionDatabases, error) {
 }
 
 // getの実装
-func (d NotionDatabases) Get(alias DatabaseAlias) (string, bool) {
-	id, ok := d.m[alias.Value()]
+func (d NotionDatabases) Get(alias string) (string, bool) {
+	id, ok := d.m[alias]
 	return id, ok
 }
